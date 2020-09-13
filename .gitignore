@@ -1,0 +1,8 @@
+*.log
+*.swp
+*.pyc
+__pycache__/
+env/
+.idea/
+.vscode/
+data/
