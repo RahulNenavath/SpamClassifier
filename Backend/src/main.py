@@ -27,11 +27,11 @@ class Prediction:
 
     def inference(self, text: str) -> tuple:
         txt = self.tokenizer.texts_to_sequences([text])
-        txt = pad_sequences(txt, maxlen=self.maxlen)
+        txt = pad_sequences(txt, maxlen=int(self.maxlen))
         prediction = self.model.predict(txt)
         self.confidence = prediction[0][0]
-        return "spam", self.confidence if self.confidence > self.prediction_threshold \
-            else "ham", self.confidence
+        return ("spam", self.confidence) if self.confidence > self.prediction_threshold \
+            else ("ham", self.confidence)
 
 
 class PredictionRequest(BaseModel):
@@ -55,7 +55,7 @@ async def home():
 async def predict(request: PredictionRequest):
     try:
         prediction, confidence = prediction_pipeline.inference(text=request.text)
-        return JSONResponse(content=jsonable_encoder({'prediction': prediction, 'confidence': confidence}))
+        return JSONResponse(content=jsonable_encoder({'prediction': prediction, 'confidence': str(confidence)}))
     except Exception as e:
         return JSONResponse(content=jsonable_encoder({'Error': traceback.format_exc(), 'Exception': e}))
 
