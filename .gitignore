@@ -2,7 +2,7 @@
 *.swp
 *.pyc
 __pycache__/
-env/
+venv/
 .idea/
 .vscode/
 data/
