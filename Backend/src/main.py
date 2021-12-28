@@ -38,7 +38,7 @@ class PredictionRequest(BaseModel):
     text: str
 
 
-prediction_pipeline = Prediction()
+prediction_pipeline = Prediction(model=model, tokenizer=tokenizer)
 
 
 @app.get("/ping")
