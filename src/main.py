@@ -31,8 +31,9 @@ class Prediction:
 
 def handler(event, context):
 
-    request_body = json.loads(event['body'])
+    request_body = event['body']
     prediction_pipeline = Prediction(model=model, tokenizer=tokenizer)
+    print(f'Requested Text: {request_body["text"]}')
 
     try:
         prediction, confidence = prediction_pipeline.inference(text=request_body['text'])
