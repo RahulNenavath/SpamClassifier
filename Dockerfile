@@ -11,7 +11,6 @@ RUN pip --no-cache-dir install \
 
 COPY src/ .
 
-COPY main.py ${LAMBDA_TASK_ROOT}
+COPY src/main.py ${LAMBDA_TASK_ROOT}
 
-#CMD ["python", "main.py"]
 CMD ["main.handler"]
