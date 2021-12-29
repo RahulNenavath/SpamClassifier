@@ -32,20 +32,21 @@ class Prediction:
 def handler(event, context):
 
     request_body = json.loads(event['body'])
-    return request_body['text']
-    # prediction_pipeline = Prediction(model=model, tokenizer=tokenizer)
-    #
-    # try:
-    #     prediction, confidence = prediction_pipeline.inference(text=request_body['text'])
-    #     response = {
-    #         "statusCode": 200,
-    #         "prediction": prediction,
-    #         "confidence": str(confidence)
-    #     }
-    #     return response
-    # except Exception as e:
-    #     return {
-    #         "statusCode": 500,
-    #         "error": str(e),
-    #         "traceback": str(traceback.format_exc())
-    #     }
+    request_text = str(request_body['text'])
+
+    prediction_pipeline = Prediction(model=model, tokenizer=tokenizer)
+
+    try:
+        prediction, confidence = prediction_pipeline.inference(text=request_text)
+
+        return {
+            "statusCode": 200,
+            "prediction": prediction,
+            "confidence": str(confidence)
+        }
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "error": str(e),
+            "traceback": str(traceback.format_exc())
+        }
