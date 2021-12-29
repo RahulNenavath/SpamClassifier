@@ -1,4 +1,4 @@
-FROM python:3.8.12-slim
+FROM public.ecr.aws/lambda/python:3.8
 
 WORKDIR /app/src
 
@@ -13,4 +13,5 @@ RUN pip --no-cache-dir install \
 
 COPY src/ .
 
-CMD ["python", "main.py"]
+#CMD ["python", "main.py"]
+CMD ["main.handler"]
