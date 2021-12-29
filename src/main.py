@@ -30,13 +30,12 @@ class Prediction:
 
 
 def handler(event, context):
-
-    logging.info(f'Event: {event}')
-
+    
+    request_body = json.load(event.get('body'))
     prediction_pipeline = Prediction(model=model, tokenizer=tokenizer)
 
     try:
-        prediction, confidence = prediction_pipeline.inference(text=event.get("text"))
+        prediction, confidence = prediction_pipeline.inference(text=request_body.get('text'))
         response = {
             "statusCode": 200,
             "prediction": prediction,
