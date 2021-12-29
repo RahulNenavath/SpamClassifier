@@ -41,12 +41,22 @@ def handler(event, context):
 
         return {
             "statusCode": 200,
-            "prediction": prediction,
-            "confidence": str(confidence)
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": json.dumps({
+                "prediction": prediction,
+                "confidence": str(confidence)
+            })
         }
     except Exception as e:
         return {
-            "statusCode": 500,
-            "error": str(e),
-            "traceback": str(traceback.format_exc())
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": json.dumps({
+                "Error": str(traceback.format_exc),
+                "Exception": str(e)
+            })
         }
