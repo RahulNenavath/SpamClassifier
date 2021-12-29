@@ -31,6 +31,8 @@ class Prediction:
 
 def handler(event, context):
 
+    logging.info(f'Event: {event}')
+
     prediction_pipeline = Prediction(model=model, tokenizer=tokenizer)
     data = json.loads(event.get('Records')[0].get('body'))
 
