@@ -30,7 +30,8 @@ class Prediction:
 
 
 def handler(event, context):
-
+    print(event)
+    logging.info(event)
     return event
 
     # request_body = json.loads(event.get('body'))
