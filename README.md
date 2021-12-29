@@ -1,4 +1,4 @@
-# Spam-Classifier
+# Spam-Classifier V2
 
 Downloaded the dataset "sms spam classifier" from kaggle and extended the dataset using spam sms from my personal mobile phone, Thus making it a personalized dataset. This also helped to handle the class imbalance problem present in the initial kaggle dataset. Analysed the text using text cloud. Performed standard text processing techniques. Split the Dataset into 70-30 proportion. Trained an LSTM model for 10 epochs and achieved a validation accuracy and loss of 0.99 and 0.03 respectively. The model is served via Flask and has been containerized via Docker.
 
