@@ -30,9 +30,9 @@ class Prediction:
 
 
 def handler(event, context):
-    return event['body']
 
-    # request_body = json.loads(event['body'])
+    request_body = json.loads(event['body'])
+    return request_body['text']
     # prediction_pipeline = Prediction(model=model, tokenizer=tokenizer)
     #
     # try:
