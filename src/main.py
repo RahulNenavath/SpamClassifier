@@ -31,32 +31,51 @@ class Prediction:
 
 def handler(event, context):
 
-    request_body = json.loads(event['body'])
-    request_text = str(request_body['text'])
-
-    prediction_pipeline = Prediction(model=model, tokenizer=tokenizer)
-
-    try:
-        prediction, confidence = prediction_pipeline.inference(text=request_text)
-
+    if event['rawPath'] == '/' or event['rawPath'] == '/ping':
         return {
             "statusCode": 200,
             "headers": {
                 "Content-Type": "application/json"
             },
-            "body": json.dumps({
-                "prediction": prediction,
-                "confidence": str(confidence)
-            })
+            "serverMessage": "SMS Spam Classification API Service Active"
         }
-    except Exception as e:
+
+    elif event['rawPath'] == '/predict':
+
+        request_body = json.loads(event['body'])
+        request_text = str(request_body['text'])
+
+        prediction_pipeline = Prediction(model=model, tokenizer=tokenizer)
+
+        try:
+            prediction, confidence = prediction_pipeline.inference(text=request_text)
+
+            return {
+                "statusCode": 200,
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": json.dumps({
+                    "prediction": prediction,
+                    "confidence": str(confidence)
+                })
+            }
+        except Exception as e:
+            return {
+                "statusCode": 200,
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": json.dumps({
+                    "Error": str(traceback.format_exc),
+                    "Exception": str(e)
+                })
+            }
+    else:
         return {
             "statusCode": 200,
             "headers": {
                 "Content-Type": "application/json"
             },
-            "body": json.dumps({
-                "Error": str(traceback.format_exc),
-                "Exception": str(e)
-            })
+            "serverMessage": "API Method Not Allowed"
         }
