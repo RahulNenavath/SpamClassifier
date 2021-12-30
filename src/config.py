@@ -19,7 +19,7 @@ class Config:
         self.model_path = os.path.join(self.model_folder_path, self.model_name)
         self.tokenizer_path = os.path.join(self.model_folder_path, self.tokenizer_name)
         self.max_length = os.getenv('MAX_LEN')
-        self.decision_threshold = 0.75
+        self.decision_threshold = 0.50
         # Deployment Config
         self.host_address = '0.0.0.0'
         self.port = os.getenv('PORT')
