@@ -37,7 +37,10 @@ def handler(event, context):
             "headers": {
                 "Content-Type": "application/json"
             },
-            "serverMessage": "SMS Spam Classification API Service Active"
+            "body": json.dumps({
+                "Service": "SMS Spam Classification API",
+                "Status": "Active"
+            })
         }
 
     elif event['rawPath'] == '/predict':
@@ -77,5 +80,9 @@ def handler(event, context):
             "headers": {
                 "Content-Type": "application/json"
             },
-            "serverMessage": "API Method Not Allowed"
+            "body": json.dumps({
+                "Service": "SMS Spam Classification API",
+                "Status": "Active",
+                "Message": "API method not allowed"
+            })
         }
