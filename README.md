@@ -1,30 +1,28 @@
-# Spam-Classifier V2
+# Spam-Classifier
 
-Downloaded the dataset "sms spam classifier" from kaggle and extended the dataset using spam sms from my personal mobile phone, Thus making it a personalized dataset. This also helped to handle the class imbalance problem present in the initial kaggle dataset. Analysed the text using text cloud. Performed standard text processing techniques. Split the Dataset into 70-30 proportion. Trained an LSTM model for 10 epochs and achieved a validation accuracy and loss of 0.99 and 0.03 respectively. The model is served via Flask and has been containerized via Docker.
+## Description
+- New Updates:
+  - Migrated from TF v2.6 to TF v2.11
+  - Made use of TF Datasets to load and process data
+  - Integrated tokenizer and model into a single end-to-end model
+- Extended Dataset: Downloaded the dataset "sms spam classifier" from kaggle and extended the dataset using spam sms from my personal mobile phone, Thus making it a personalized dataset. 
+- Analysed the text using text cloud. 
+- Standardization: Lower text and removing punctuations & special chars. 
+- Data split: Train 70% & Test 30%. 
+- Models Trained: Conv-1D model & LSTM model
+- Epochs Trained: 10 epochs
+- K-Folds Trained: 10 folds
+- Metrics Computed: Precision | Recall | F1-Score | ROC Curve
+- Model Selection: LSTM model has an overall higher mean F-1 score than Conv model for 10-Fold CV. However, on looking at the individual F-1 score of spam & not-spam classes, Conv model gives a better score. <br>
+Check the Notebook for detailed evaluation metrics. The module is containerized via Docker
+- Model Enhancements: Pruning was done to add sparsity in the model to reduce the size of the model without losing on accuracy
 
-## Running the project:
+## Input and Output:
+Input: { "text": string } <br>
+Output: { "prediction": "spam/not-spam", "confidence": range (0 to 1) }
 
-#### Using Flask:
+## Tech Stack:
+Python 3.8, Tensorflow 2.11, Pandas, Numpy, Docker, AWS Lambda, AWS ECR, and GitHub CI/CD.
 
-Make sure the virtual environment: "env" is active
-
-from the root folder, enter cmd:
-    `python main.py`
-
-Then Send POST request to URL: http://0.0.0.0:8000/predict to get the prediction
-
-
-#### Using Docker:
-
-Make sure the virtual environment: "env" is active
-
-Build the docker image using:
-    `docker build -t <your_container_name>` container name example: spamclassifier_api
-
-Run the build image:
-    `docker run -p 8000:8000 -t <your_container_name>` container name example: spamclassifier_api
-
-Note: Port 8000 is exposed for Docker container and Flask app is configured to run on port 8000
-
-Then Send POST request to URL: http://{default docker ip}:8000/predict to get the prediction
-
+## Deployment:
+This project has been deployed as a AWS Lambda function using container image from AWS ECR service and made available as an API. AWS Lambda functions are cost-effective solutions for personal projects that have minimal network traffic. <br> In order to facilitate for a higher network traffic, it can easily be done so by pulling the ECR image into an EC2 container and deploying the container.
