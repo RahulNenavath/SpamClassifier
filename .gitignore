@@ -17,3 +17,8 @@ reports/
 
 # Conda env
 .conda/
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
