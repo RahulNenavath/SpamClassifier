@@ -1,9 +1,6 @@
 import os
 
 import torch
-from dotenv import load_dotenv
-
-load_dotenv()
 
 os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
 
