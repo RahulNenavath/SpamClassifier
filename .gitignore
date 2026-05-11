@@ -7,3 +7,18 @@ venv/
 .vscode/
 data/
 .DS_Store
+CLAUDE.md
+
+# Trained model artifacts (large files — copy locally before docker build)
+src/model/bge_spam_classifier/
+
+# Analysis output
+reports/
+
+# Conda env
+.conda/
+
+# Build artifacts
+*.egg-info/
+dist/
+build/

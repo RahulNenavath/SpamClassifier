@@ -1,16 +1,19 @@
-FROM public.ecr.aws/lambda/python:3.8
+# Production image — PyTorch 2.5.1 + CUDA 12.4 (Linux/GCP GPU)
+# Matches minimum torch version required by transformers 5.x (custom_op API change in 2.5)
+FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
-COPY requirements.txt .
+WORKDIR /app
 
-RUN /var/lang/bin/python3.8 -m pip install --upgrade pip
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN pip --no-cache-dir install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
-# Tensorflow 2.7.0 install from given path
-#RUN python3.8 -m pip --no-cache-dir install \
-#    https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow_cpu-2.11.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+COPY pyproject.toml .
+COPY src/ src/
 
-COPY src/ .
+RUN pip install --no-cache-dir . --no-build-isolation
 
-COPY src/main.py ${LAMBDA_TASK_ROOT}
+ENV PYTORCH_ENABLE_MPS_FALLBACK=1
+ENV PORT=8080
+EXPOSE 8080
 
-CMD ["main.handler"]
+CMD ["python", "-m", "uvicorn", "src.inference:app", "--host", "0.0.0.0", "--port", "8080"]

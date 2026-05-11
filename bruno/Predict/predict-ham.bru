@@ -1,0 +1,21 @@
+meta {
+  name: Predict - Ham Message
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/predict
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "text": "Hey, are we still on for lunch tomorrow? Let me know if you want to meet at the usual place around noon."
+  }
+}

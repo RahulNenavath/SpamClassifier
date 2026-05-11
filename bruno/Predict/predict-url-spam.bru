@@ -1,0 +1,21 @@
+meta {
+  name: Predict - Spam with URL
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/predict
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "text": "Your account has been suspended. Verify your details immediately at http://secure-bank-login.xyz/verify or your account will be closed."
+  }
+}

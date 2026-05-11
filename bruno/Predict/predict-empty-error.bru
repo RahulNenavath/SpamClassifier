@@ -1,0 +1,21 @@
+meta {
+  name: Predict - Empty Text (422 Error)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/predict
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "text": ""
+  }
+}
