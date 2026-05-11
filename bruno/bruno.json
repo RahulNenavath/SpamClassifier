@@ -1,0 +1,6 @@
+{
+  "version": "1",
+  "name": "SMS Spam Classifier",
+  "type": "collection",
+  "ignore": []
+}

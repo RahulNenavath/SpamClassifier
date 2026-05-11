@@ -1,40 +1,38 @@
 import os
-import re
-import string
-import logging
-import tensorflow as tf
+
+import torch
 from dotenv import load_dotenv
 
 load_dotenv()
-logging.basicConfig(level=logging.INFO)
+
+os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
 
 
 class Config:
-    def __init__(self):
-        # Project Config
-        self.project_folder = os.path.dirname(__file__)
-        self.model_folder_path = os.path.join(self.project_folder, 'model')
-        self.model_path = os.path.join(self.model_folder_path, 'pruned_spam_detector')
-        # Model Config
-        self.decision_threshold = 0.75
-        # Deployment Config
-        self.host_address = '0.0.0.0'
-        self.port = os.getenv('PORT')
-        logging.info(f'TF Version: {tf.__version__}')
-        logging.info(f'Configuration Loaded Successfully!')
+    # HuggingFace model
+    hf_model_name: str = "BAAI/bge-small-en-v1.5"
+    model_save_path: str = os.path.join(os.path.dirname(__file__), "model", "bge_spam_classifier")
+    num_labels: int = 2
+    max_seq_length: int = 128  # SMS is short; 128 tokens is ample
 
-    def load_model_objects(self):
+    # Inference — lower than original 0.75; calibrate from ROC curve post-training
+    decision_threshold: float = 0.5
 
-        @tf.keras.utils.register_keras_serializable(package='Custom', name='custom_standardization')
-        def custom_standardization(input_data):
-            lowercase = tf.strings.lower(input_data)
-            remove_special_chars = tf.strings.regex_replace(lowercase, r"[^a-zA-Z0-9 ]", "")
-            return tf.strings.regex_replace(
-                remove_special_chars, f"[{re.escape(string.punctuation)}]", ""
-            )
+    # Training
+    learning_rate: float = 2e-4  # high LR is safe because encoder is frozen
+    batch_size: int = 32
+    epochs: int = 10
+    val_split: float = 0.2
+    random_seed: int = 42
 
-        with tf.keras.utils.custom_object_scope({'custom_standardization': custom_standardization}):
-            model = tf.keras.models.load_model(self.model_path)
-            logging.info(f'Model Successfully Loaded!')
+    # Server
+    host: str = "0.0.0.0"
+    port: int = int(os.getenv("PORT", "8080"))
 
-        return model
+    @staticmethod
+    def get_device() -> torch.device:
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+            return torch.device("mps")
+        return torch.device("cpu")
