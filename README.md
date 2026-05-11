@@ -118,8 +118,6 @@ src/
   data_analysis.py   — EDA + visualisations
   model/
     bge_spam_classifier/  ← HF SavedModel (gitignored, required for Docker build)
-  notebooks/
-    Spam_Classifier.ipynb ← Historical TF training notebook
 data/                — Dataset files (gitignored)
 reports/             — Generated visualisations (gitignored)
 bruno/               — Bruno API collection
@@ -137,6 +135,48 @@ pyproject.toml       — Project dependencies
 - Layers 9–11: **trainable** (adapt to SMS domain)
 - Classification head: **trainable** (2-layer linear, randomly initialised)
 - **5.3M / 33.4M params trained (16%)**
+
+## Historical Baseline — TF v1 (ablation)
+
+The original implementation used TensorFlow 2.11 with two custom architectures trained from scratch on a 1,000-token vocabulary (embedding dim 50, max sequence 150). Text was lowercased and stripped of all punctuation and special characters before tokenisation — URLs and phone numbers were lost entirely.
+
+**Train / test split:** 80/20, no stratification — 5,360 train / 1,340 test.
+
+### Architectures
+
+**BiLSTM**
+```
+Embedding(1000, 50) → BiLSTM(64, return_seq) → BiLSTM(64) → Dense(256, relu) → Dropout(0.5) → Dense(1, sigmoid)
+```
+
+**Conv1D** ← selected for deployment
+```
+Embedding(1000, 50) → Conv1D(128, k=7, stride=3) → Conv1D(128, k=7, stride=3) → GlobalMaxPool → Dense(128, relu) → Dropout(0.5) → Dense(1, sigmoid)
+```
+
+### Results (threshold = 0.75)
+
+| Model | Accuracy | Ham F1 | Spam F1 | Spam Recall |
+|---|---|---|---|---|
+| BiLSTM | 87% | 0.92 | 0.67 | **0.50** ← critical failure |
+| Conv1D | 98% | 0.98 | 0.96 | 0.93 |
+
+### 10-Fold Cross-Validation
+
+| Model | Mean F1 | Median F1 |
+|---|---|---|
+| BiLSTM | 0.933 | 0.940 |
+| Conv1D | 0.930 | 0.935 |
+
+K-fold scores were near-identical across both models. Conv1D was selected because it showed meaningfully better per-class F1 on the held-out test set — particularly spam recall (0.93 vs 0.50 on BiLSTM), which is the more critical metric for a spam classifier.
+
+### Post-training Pruning
+
+Conv1D was pruned using `tensorflow-model-optimization` with polynomial magnitude pruning (50% → 80% sparsity over 10 epochs, batch size 32). This reduced model size significantly with no meaningful accuracy loss. The pruned model was saved as a TF SavedModel with the text standardization layer baked in end-to-end.
+
+> Note: the pruned model reported 100% test accuracy during evaluation, which is a known batching artifact from the eval step count — the true baseline is the unpruned Conv1D at 98%.
+
+---
 
 ## Deployment (Phase 2 — GCP, planned)
 
