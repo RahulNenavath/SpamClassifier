@@ -72,3 +72,16 @@ jobs:
           gcloud run services describe ${{ env.IMAGE }} \
             --region ${{ env.REGION }} \
             --format="value(status.url)"
+
+      - name: Prune old images from Artifact Registry
+        run: |
+          IMAGE_PATH=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}
+          CURRENT_DIGEST=$(gcloud artifacts docker images list ${IMAGE_PATH} \
+            --include-tags \
+            --filter="tags:${{ github.sha }}" \
+            --format="get(digest)")
+          gcloud artifacts docker images list ${IMAGE_PATH} \
+            --format="get(digest)" \
+            | sort -u \
+            | grep -v "^${CURRENT_DIGEST}$" \
+            | xargs -I{} gcloud artifacts docker images delete "${IMAGE_PATH}@{}" --quiet --async || true
