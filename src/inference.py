@@ -10,6 +10,7 @@ Routes:
     POST /predict — {"text": "..."} → {"prediction": "spam"|"not-spam", "confidence": 0.97}
 """
 
+import hmac
 import os
 import sys
 
@@ -23,14 +24,22 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from src.config import Config
 
-app = FastAPI(title="SMS Spam Classifier", version="0.2.0")
+app = FastAPI(
+    title="SMS Spam Classifier",
+    version="0.2.0",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
+)
 
 _API_KEY = os.getenv("API_KEY")
 _api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 async def _require_api_key(api_key: str = Security(_api_key_header)) -> None:
-    if _API_KEY and api_key != _API_KEY:
+    if not _API_KEY:
+        raise RuntimeError("API_KEY environment variable is not configured")
+    if not hmac.compare_digest((api_key or "").encode(), _API_KEY.encode()):
         raise HTTPException(status_code=403, detail="Invalid or missing API key")
 
 _tokenizer = None

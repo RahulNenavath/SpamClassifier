@@ -64,7 +64,7 @@ jobs:
             --memory 16Gi \
             --port 8080 \
             --max-instances 1 \
-            --set-env-vars API_KEY=${{ secrets.API_KEY }}
+            --set-secrets API_KEY=spam-classifier-api-key:latest
 
       - name: Print Cloud Run URL
         run: |

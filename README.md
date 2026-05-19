@@ -1,6 +1,6 @@
 # SMS Spam Classifier
 
-Fine-tuned `BAAI/bge-small-en-v1.5` (33.4M param BERT-based model) for binary SMS spam classification. Served via FastAPI, containerised with Docker, trained on Apple Metal GPU (MPS) or CUDA.
+Fine-tuned `BAAI/bge-small-en-v1.5` (33.4M param BERT-based model) for binary SMS spam classification. Served via FastAPI, containerised with Docker, trained on Apple Metal GPU (MPS), deployed to Google Cloud Run with an NVIDIA L4 GPU.
 
 ## Results
 
@@ -16,16 +16,21 @@ Fine-tuned `BAAI/bge-small-en-v1.5` (33.4M param BERT-based model) for binary SM
 - **Training** — PyTorch 2.x, Apple MPS (Metal) on macOS / CUDA on Linux
 - **Serving** — FastAPI + Uvicorn
 - **Containerisation** — Docker (arm64 CPU for local, amd64 CUDA for production)
+- **Deployment** — Google Cloud Run (NVIDIA L4 GPU), Artifact Registry, GCS
+- **CI/CD** — GitHub Actions with Workload Identity Federation (keyless auth)
 - **API testing** — Bruno
 - **Environment** — Conda + pyproject.toml
 
 ## API
 
 ```
-GET  /         — service info
-GET  /ping     — liveness probe
-POST /predict  — {"text": "..."} → {"prediction": "spam"|"not-spam", "confidence": 0.97}
+GET  /         — service info          (requires X-API-Key)
+GET  /ping     — liveness probe        (public)
+POST /predict  — {"text": "..."}       (requires X-API-Key)
+               → {"prediction": "spam"|"not-spam", "confidence": 0.97}
 ```
+
+All routes except `/ping` require an `X-API-Key` header. If the `API_KEY` environment variable is not set (local dev), auth is bypassed automatically.
 
 ## Setup
 
@@ -95,9 +100,21 @@ docker build -t spam-classifier .
 docker run -d -p 8080:8080 --gpus all spam-classifier
 ```
 
+## Smoke Test
+
+```bash
+# Local
+python src/smoke_test.py
+
+# GCP (with API key)
+python src/smoke_test.py --url https://<your-cloud-run-url> --api-key <your-api-key>
+```
+
+Fires 5 spam + 5 ham messages, asserts predictions, exits 0 if all pass.
+
 ## Testing with Bruno
 
-Open Bruno → **Open Collection** → select the `bruno/` folder. Choose the `local` or `docker` environment (both target `http://localhost:8080`).
+Open Bruno → **Open Collection** → select the `bruno/` folder. Choose `local`, `docker`, or `gcp` environment. For `gcp`, set the `apiKey` secret in the Bruno environment UI (lock icon).
 
 | Folder | Request | Description |
 |---|---|---|
@@ -108,19 +125,26 @@ Open Bruno → **Open Collection** → select the `bruno/` folder. Choose the `l
 | Predict | Spam with URL | Phishing URL (tests raw text preservation) |
 | Predict | Empty Text | 422 validation error |
 
+## Deployment
+
+See [docs/GCP_SETUP.md](docs/GCP_SETUP.md) for full instructions on reproducing the GCP + GitHub Actions deployment from scratch.
+
 ## Project Structure
 
 ```
 src/
   config.py          — Config class: model name, paths, hyperparams, get_device()
   train.py           — Fine-tuning script
-  inference.py       — FastAPI app
+  inference.py       — FastAPI app (API key auth middleware)
   data_analysis.py   — EDA + visualisations
+  smoke_test.py      — End-to-end smoke test (10 messages)
   model/
-    bge_spam_classifier/  ← HF SavedModel (gitignored, required for Docker build)
+    bge_spam_classifier/  ← HF SavedModel (gitignored, uploaded to GCS for CI)
 data/                — Dataset files (gitignored)
 reports/             — Generated visualisations (gitignored)
-bruno/               — Bruno API collection
+bruno/               — Bruno API collection + environments
+docs/
+  GCP_SETUP.md       — GCP & GitHub Actions setup guide
 Dockerfile           — Production (amd64, CUDA 12.4, torch 2.5.1)
 Dockerfile.local     — Local Mac (arm64, CPU-only)
 setup.sh             — Conda environment setup
@@ -172,12 +196,6 @@ K-fold scores were near-identical across both models. Conv1D was selected becaus
 
 ### Post-training Pruning
 
-Conv1D was pruned using `tensorflow-model-optimization` with polynomial magnitude pruning (50% → 80% sparsity over 10 epochs, batch size 32). This reduced model size significantly with no meaningful accuracy loss. The pruned model was saved as a TF SavedModel with the text standardization layer baked in end-to-end.
+Conv1D was pruned using `tensorflow-model-optimization` with polynomial magnitude pruning (50% → 80% sparsity over 10 epochs, batch size 32). This reduced model size significantly with no meaningful accuracy loss.
 
 > Note: the pruned model reported 100% test accuracy during evaluation, which is a known batching artifact from the eval step count — the true baseline is the unpruned Conv1D at 98%.
-
----
-
-## Deployment (Phase 2 — GCP, planned)
-
-Google Cloud Run with NVIDIA L4 GPU using the production `Dockerfile`. GitHub Actions CI/CD will push to Artifact Registry on merge to `master`.
