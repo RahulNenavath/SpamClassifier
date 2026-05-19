@@ -63,7 +63,8 @@ jobs:
             --cpu 4 \
             --memory 16Gi \
             --port 8080 \
-            --max-instances 1
+            --max-instances 1 \
+            --set-env-vars API_KEY=${{ secrets.API_KEY }}
 
       - name: Print Cloud Run URL
         run: |

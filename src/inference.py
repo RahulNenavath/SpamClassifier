@@ -16,13 +16,22 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import torch
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Security
+from fastapi.security.api_key import APIKeyHeader
 from pydantic import BaseModel
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from src.config import Config
 
 app = FastAPI(title="SMS Spam Classifier", version="0.2.0")
+
+_API_KEY = os.getenv("API_KEY")
+_api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+async def _require_api_key(api_key: str = Security(_api_key_header)) -> None:
+    if _API_KEY and api_key != _API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid or missing API key")
 
 _tokenizer = None
 _model = None
@@ -59,7 +68,7 @@ class PredictResponse(BaseModel):
     confidence: float
 
 
-@app.get("/")
+@app.get("/", dependencies=[Security(_require_api_key)])
 def root():
     return {
         "service": "SMS Spam Classifier",
@@ -73,7 +82,7 @@ def ping():
     return {"status": "ok"}
 
 
-@app.post("/predict", response_model=PredictResponse)
+@app.post("/predict", response_model=PredictResponse, dependencies=[Security(_require_api_key)])
 def predict(req: PredictRequest):
     if not req.text or not req.text.strip():
         raise HTTPException(status_code=422, detail="text must not be empty")
