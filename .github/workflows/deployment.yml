@@ -36,7 +36,9 @@ jobs:
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
       - name: Download model weights from GCS
-        run: gsutil -m cp -r gs://spam-classifier-sms-model/bge_spam_classifier src/model/bge_spam_classifier
+        run: |
+          mkdir -p src/model/bge_spam_classifier
+          gsutil -m cp -r gs://spam-classifier-sms-model/bge_spam_classifier/* src/model/bge_spam_classifier/
 
       - name: Build and push
         run: |
