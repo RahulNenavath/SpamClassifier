@@ -1,4 +1,4 @@
-name: Build and push to Artifact Registry
+name: Build, push and deploy
 
 on:
   push:
@@ -11,8 +11,8 @@ env:
   IMAGE: spam-classifier
 
 jobs:
-  build-and-push:
-    name: Build and push Docker image
+  build-push-deploy:
+    name: Build, push and deploy to Cloud Run
     runs-on: ubuntu-latest
 
     permissions:
@@ -44,3 +44,25 @@ jobs:
             .
           docker push $IMAGE_URI:latest
           docker push $IMAGE_URI:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        run: |
+          IMAGE_URI=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}
+          gcloud run deploy ${{ env.IMAGE }} \
+            --image $IMAGE_URI:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --gpu 1 \
+            --gpu-type nvidia-l4 \
+            --cpu 4 \
+            --memory 16Gi \
+            --port 8080 \
+            --allow-unauthenticated \
+            --max-instances 1
+
+      - name: Print Cloud Run URL
+        run: |
+          echo "Cloud Run URL:"
+          gcloud run services describe ${{ env.IMAGE }} \
+            --region ${{ env.REGION }} \
+            --format="value(status.url)"
