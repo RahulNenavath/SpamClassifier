@@ -35,6 +35,9 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
+      - name: Download model weights from GCS
+        run: gsutil -m cp -r gs://spam-classifier-sms-model/bge_spam_classifier src/model/bge_spam_classifier
+
       - name: Build and push
         run: |
           IMAGE_URI=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}
